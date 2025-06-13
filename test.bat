@@ -26,6 +26,7 @@ echo Lancement des tests...
 echo.
 cd tests
 ..\backend\venv\Scripts\python.exe test_load.py
+..\backend\venv\Scripts\python.exe -m pytest test_rag.py
 cd ..
 
 echo.
