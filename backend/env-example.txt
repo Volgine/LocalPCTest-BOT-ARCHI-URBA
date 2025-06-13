@@ -11,4 +11,4 @@ ENVIRONMENT=development
 
 # OpenAI / Vector Store
 OPENAI_API_KEY=
-VECTOR_STORE_PATH=./vector_store
+VECTOR_STORE_PATH=./data/index.faiss

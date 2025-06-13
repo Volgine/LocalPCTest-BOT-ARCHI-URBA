@@ -27,6 +27,14 @@ Test complet de l'application sur votre PC Windows en local, sans déploiement c
 - Le fichier `.env` existe dans `/backend`
 - Message "Installation terminée !" s'affiche
 
+### 4. **Configuration IA**
+Ajoutez vos clés dans `/backend/.env` :
+
+```env
+OPENAI_API_KEY=
+VECTOR_STORE_PATH=./data/index.faiss
+```
+
 ---
 
 ## 🏃 Lancement de l'application
