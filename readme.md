@@ -48,7 +48,7 @@ start.bat
 ### Frontend (Vercel)
 1. Importer sur Vercel
 2. Root directory : `frontend`
-3. Modifier `API_URL` dans index.html :
+3. Modifier `API_URL` dans index.html : l370
    ```javascript
    const API_URL = 'https://votre-app.up.railway.app';
    ```
