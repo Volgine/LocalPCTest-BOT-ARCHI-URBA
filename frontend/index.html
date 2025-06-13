@@ -3,415 +3,863 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistant Urbanisme - POC</title>
+    <title>URBA.AI - Assistant Architecture & Urbanisme</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         
+        :root {
+            --primary-neon: #00fff0;
+            --secondary-neon: #ff00ff;
+            --accent-neon: #ffaa00;
+            --dark-bg: #0a0a0f;
+            --glass-bg: rgba(20, 20, 30, 0.7);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
             min-height: 100vh;
         }
         
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 600px;
-            padding: 2rem;
+        /* Canvas 3D Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
         
-        h1 {
-            color: #333;
-            margin-bottom: 1.5rem;
+        /* Grid Overlay */
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 240, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 240, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: grid-pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes grid-pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.1; }
+        }
+        
+        /* Main Container */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
             text-align: center;
-            font-size: 1.8rem;
+            margin-bottom: 30px;
+            animation: glow-appear 1s ease-out;
         }
         
-        .chat-box {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            height: 400px;
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 240, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 5px;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        /* Chat Interface */
+        .chat-interface {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 200px);
+        }
+        
+        /* Left Panel - Chat */
+        .chat-panel {
+            flex: 2;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 240, 0.3);
+            box-shadow: 
+                0 0 30px rgba(0, 255, 240, 0.2),
+                inset 0 0 20px rgba(0, 255, 240, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
             overflow-y: auto;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background: #fafafa;
+            scroll-behavior: smooth;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(0, 255, 240, 0.1);
+            border-radius: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--primary-neon);
+            border-radius: 4px;
         }
         
         .message {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            border-radius: 8px;
-            animation: fadeIn 0.3s ease-in;
+            margin-bottom: 20px;
+            animation: message-appear 0.3s ease-out;
         }
         
-        .user-message {
-            background: #007bff;
-            color: white;
-            margin-left: 20%;
+        @keyframes message-appear {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
             text-align: right;
         }
         
-        .bot-message {
-            background: #f1f1f1;
-            color: #333;
-            margin-right: 20%;
-            white-space: pre-line;
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 15px;
+            position: relative;
+            white-space: pre-wrap;
         }
         
-        .cached-indicator {
+        .user .message-content {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(0, 255, 240, 0.2));
+            border: 1px solid var(--secondary-neon);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+        }
+        
+        .bot .message-content {
+            background: rgba(0, 255, 240, 0.1);
+            border: 1px solid var(--primary-neon);
+            box-shadow: 0 0 20px rgba(0, 255, 240, 0.3);
+        }
+        
+        .message-meta {
             font-size: 0.75rem;
-            color: #666;
-            font-style: italic;
+            color: var(--text-secondary);
+            margin-top: 5px;
         }
         
-        .input-group {
+        .source-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(255, 170, 0, 0.2);
+            border: 1px solid var(--accent-neon);
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+        
+        /* Input Area */
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid rgba(0, 255, 240, 0.3);
+            background: rgba(10, 10, 15, 0.8);
+        }
+        
+        .input-wrapper {
             display: flex;
-            gap: 0.5rem;
+            gap: 10px;
+            align-items: center;
         }
         
-        input {
+        .chat-input {
             flex: 1;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            background: rgba(0, 255, 240, 0.05);
+            border: 1px solid rgba(0, 255, 240, 0.3);
+            color: var(--text-primary);
+            padding: 15px 20px;
+            border-radius: 25px;
             font-size: 1rem;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s;
         }
         
-        input:focus {
+        .chat-input:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: var(--primary-neon);
+            box-shadow: 0 0 20px rgba(0, 255, 240, 0.5);
+            background: rgba(0, 255, 240, 0.1);
         }
         
-        button {
-            padding: 0.75rem 1.5rem;
-            background: #007bff;
-            color: white;
+        .chat-input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        /* Buttons */
+        .cyber-button {
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon));
             border: none;
-            border-radius: 8px;
+            color: var(--dark-bg);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-transform: uppercase;
             cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
         
-        button:hover {
-            background: #0056b3;
+        .cyber-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 240, 0.5);
         }
         
-        button:disabled {
-            background: #ccc;
+        .cyber-button:active {
+            transform: translateY(0);
+        }
+        
+        .cyber-button:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
         
-        .status {
+        .upload-button {
+            background: rgba(255, 170, 0, 0.2);
+            border: 1px solid var(--accent-neon);
+            color: var(--accent-neon);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .upload-button:hover {
+            background: rgba(255, 170, 0, 0.3);
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        /* Right Panel - Info */
+        .info-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .panel-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 240, 0.3);
+            padding: 20px;
+            animation: panel-appear 0.5s ease-out;
+        }
+        
+        @keyframes panel-appear {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            color: var(--primary-neon);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background: rgba(0, 255, 240, 0.05);
+            border: 1px solid rgba(0, 255, 240, 0.2);
+            border-radius: 10px;
+            padding: 15px;
             text-align: center;
-            margin-top: 1rem;
+        }
+        
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            color: var(--primary-neon);
+            display: block;
+            text-shadow: 0 0 10px currentColor;
+        }
+        
+        .stat-label {
             font-size: 0.875rem;
-            color: #666;
+            color: var(--text-secondary);
+            text-transform: uppercase;
         }
         
-        .status.online {
-            color: #28a745;
+        /* Features */
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 255, 240, 0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
         
-        .status.offline {
-            color: #dc3545;
+        .feature-item:hover {
+            background: rgba(0, 255, 240, 0.1);
+            transform: translateX(5px);
         }
         
-        .stats {
-            text-align: center;
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-            color: #999;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .loader {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #007bff;
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon));
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
         }
         
-        @keyframes spin {
+        /* Documents */
+        .document-item {
+            background: rgba(255, 170, 0, 0.1);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .document-name {
+            font-weight: 600;
+            color: var(--accent-neon);
+        }
+        
+        .document-size {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Loading Animation */
+        .loading-dots {
+            display: inline-block;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+            100% { content: ''; }
+        }
+        
+        /* Holographic Effect */
+        .holo-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .holo-effect::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(0, 255, 240, 0.1),
+                transparent
+            );
+            animation: holo-sweep 3s linear infinite;
+        }
+        
+        @keyframes holo-sweep {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         
-        .suggestions {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-            font-size: 0.875rem;
-        }
-        
-        .suggestions h3 {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-            color: #495057;
-        }
-        
-        .suggestion-btn {
-            display: inline-block;
-            margin: 0.25rem;
-            padding: 0.375rem 0.75rem;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .suggestion-btn:hover {
-            background: #007bff;
-            color: white;
-            border-color: #007bff;
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-interface {
+                flex-direction: column;
+            }
+            
+            .info-panel {
+                display: none;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🏗️ Assistant Urbanisme POC</h1>
+    <canvas id="bg-canvas"></canvas>
+    <div class="grid-overlay"></div>
+    
+    <div class="main-container">
+        <header class="header">
+            <h1 class="logo">URBA.AI</h1>
+            <p class="tagline">Assistant Architecture & Urbanisme Neural</p>
+        </header>
         
-        <div class="chat-box" id="chatBox">
-            <div class="message bot-message">
-                Bonjour ! Je suis votre assistant pour les questions d'urbanisme. 
-                Posez-moi vos questions sur le PLU, le zonage, ou les règles de construction.
+        <div class="chat-interface">
+            <!-- Chat Panel -->
+            <div class="chat-panel holo-effect">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <div class="message-content">
+                            Bienvenue dans URBA.AI 🏗️
+                            
+Je suis votre assistant spécialisé en urbanisme et architecture, équipé d'une IA avancée et d'un système RAG pour analyser vos documents.
+
+Comment puis-je vous aider aujourd'hui ?
+                        </div>
+                        <div class="message-meta">
+                            <span class="source-badge">🤖 System</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" style="display: none;">
+                        <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                            📁 Upload
+                        </button>
+                        <input 
+                            type="text" 
+                            class="chat-input" 
+                            id="chatInput" 
+                            placeholder="Posez votre question sur l'urbanisme..."
+                            onkeypress="if(event.key === 'Enter' && !event.shiftKey) sendMessage()"
+                        >
+                        <button class="cyber-button" id="sendButton" onclick="sendMessage()">
+                            Analyser
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <div class="input-group">
-            <input 
-                type="text" 
-                id="questionInput" 
-                placeholder="Ex: Quelle est la hauteur maximale autorisée ?"
-                onkeypress="if(event.key === 'Enter') sendQuestion()"
-            >
-            <button onclick="sendQuestion()" id="sendButton">Envoyer</button>
-        </div>
-        
-        <div class="suggestions">
-            <h3>💡 Questions fréquentes :</h3>
-            <span class="suggestion-btn" onclick="askSuggestion('Quelle est la hauteur maximale autorisée ?')">
-                Hauteur maximale
-            </span>
-            <span class="suggestion-btn" onclick="askSuggestion('Dans quelle zone se trouve ma parcelle ?')">
-                Zone PLU
-            </span>
-            <span class="suggestion-btn" onclick="askSuggestion('Puis-je construire en limite de propriété ?')">
-                Limite propriété
-            </span>
-            <span class="suggestion-btn" onclick="askSuggestion('Quelles sont les règles de stationnement ?')">
-                Stationnement
-            </span>
-        </div>
-        
-        <div class="status" id="status">Connexion...</div>
-        <div class="stats" id="stats">
-            <small>Requêtes: <span id="totalQueries">0</span> | 
-            Cache hits: <span id="cacheHits">0</span> |
-            Processing: <span id="processingTime">-</span>ms</small>
+            
+            <!-- Info Panel -->
+            <div class="info-panel">
+                <!-- Stats Section -->
+                <div class="panel-section">
+                    <h3 class="section-title">📊 Statistiques</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="queryCount">0</span>
+                            <span class="stat-label">Requêtes</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="docCount">0</span>
+                            <span class="stat-label">Documents</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="cacheHits">0</span>
+                            <span class="stat-label">Cache Hits</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="responseTime">0</span>
+                            <span class="stat-label">ms</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Features Section -->
+                <div class="panel-section">
+                    <h3 class="section-title">🚀 Fonctionnalités</h3>
+                    <div class="feature-item" onclick="askExample('hauteur maximale zone UB')">
+                        <div class="feature-icon">📏</div>
+                        <div>
+                            <div style="font-weight: 600;">Hauteurs & Gabarits</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Règles de construction</div>
+                        </div>
+                    </div>
+                    <div class="feature-item" onclick="askExample('emprise au sol autorisée')">
+                        <div class="feature-icon">📐</div>
+                        <div>
+                            <div style="font-weight: 600;">Emprise au Sol</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Surfaces constructibles</div>
+                        </div>
+                    </div>
+                    <div class="feature-item" onclick="askExample('règles de stationnement bureaux')">
+                        <div class="feature-icon">🚗</div>
+                        <div>
+                            <div style="font-weight: 600;">Stationnement</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Normes parking</div>
+                        </div>
+                    </div>
+                    <div class="feature-item" onclick="askExample('permis de construire nécessaire')">
+                        <div class="feature-icon">📋</div>
+                        <div>
+                            <div style="font-weight: 600;">Autorisations</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">PC, DP, PA</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Documents Section -->
+                <div class="panel-section">
+                    <h3 class="section-title">📄 Documents</h3>
+                    <div id="documentsList">
+                        <div style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                            Aucun document uploadé
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Configuration
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:8000' 
-            : 'https://your-app.up.railway.app';
-
-        // État de l'application
+            : window.location.origin;
+        
+        // État
         let isLoading = false;
-
-        // Éléments DOM
-        const chatBox = document.getElementById('chatBox');
-        const questionInput = document.getElementById('questionInput');
-        const sendButton = document.getElementById('sendButton');
-        const status = document.getElementById('status');
-        const totalQueriesSpan = document.getElementById('totalQueries');
-        const cacheHitsSpan = document.getElementById('cacheHits');
-        const processingTimeSpan = document.getElementById('processingTime');
-
-        // Vérifier la connexion au démarrage
-        checkConnection();
-        updateStats();
-
-        // Mettre à jour les stats toutes les 5 secondes
-        setInterval(updateStats, 5000);
-
-        async function checkConnection() {
+        let sessionId = generateSessionId();
+        let uploadedDocuments = [];
+        
+        // Three.js Background
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas: document.getElementById('bg-canvas'),
+            alpha: true,
+            antialias: true
+        });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.z = 5;
+        
+        // Créer des particules pour l'effet cyberpunk
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 3000;
+        const posArray = new Float32Array(particlesCount * 3);
+        
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.02,
+            color: 0x00fff0,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        
+        // Créer une grille 3D
+        const gridHelper = new THREE.GridHelper(20, 20, 0x00fff0, 0x00fff0);
+        gridHelper.material.opacity = 0.2;
+        gridHelper.material.transparent = true;
+        gridHelper.rotation.x = Math.PI / 2;
+        scene.add(gridHelper);
+        
+        // Animation Three.js
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            particlesMesh.rotation.x += 0.0003;
+            particlesMesh.rotation.y += 0.0005;
+            
+            const positions = particlesMesh.geometry.attributes.position.array;
+            for(let i = 0; i < positions.length; i += 3) {
+                positions[i + 1] += Math.sin(Date.now() * 0.001 + i) * 0.0001;
+            }
+            particlesMesh.geometry.attributes.position.needsUpdate = true;
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        // Responsive Three.js
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Fonctions utilitaires
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // Gestion des fichiers
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('session_id', sessionId);
+            
+            const uploadButton = document.querySelector('.upload-button');
+            uploadButton.textContent = '⏳ Upload...';
+            uploadButton.disabled = true;
+            
             try {
-                const response = await fetch(`${API_URL}/health`);
-                const data = await response.json();
+                const response = await fetch(`${API_URL}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                status.textContent = `✅ En ligne - Cache: ${data.cache}`;
-                status.className = 'status online';
+                if (!response.ok) throw new Error('Upload failed');
+                
+                const data = await response.json();
+                uploadedDocuments.push(data);
+                updateDocumentsList();
+                
+                addMessage(`📄 Document "${data.filename}" uploadé avec succès (${data.chunks} chunks indexés)`, 'system');
+                
             } catch (error) {
-                status.textContent = '❌ Hors ligne';
-                status.className = 'status offline';
-                console.error('Erreur de connexion:', error);
+                console.error('Upload error:', error);
+                addMessage('❌ Erreur lors de l\'upload du document', 'system');
+            } finally {
+                uploadButton.textContent = '📁 Upload';
+                uploadButton.disabled = false;
+                e.target.value = '';
+            }
+        });
+        
+        // Envoyer un message
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || isLoading) return;
+            
+            isLoading = true;
+            document.getElementById('sendButton').disabled = true;
+            
+            // Ajouter le message utilisateur
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Ajouter un message de chargement
+            const loadingId = Date.now();
+            addMessage(`<span class="loading-dots">Analyse en cours</span>`, 'bot', loadingId);
+            
+            try {
+                const startTime = Date.now();
+                
+                const response = await fetch(`${API_URL}/api/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: message,
+                        session_id: sessionId,
+                        use_context: uploadedDocuments.length > 0
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Query failed');
+                
+                const data = await response.json();
+                const responseTime = Date.now() - startTime;
+                
+                // Remplacer le message de chargement
+                const loadingMsg = document.getElementById(`msg-${loadingId}`);
+                if (loadingMsg) loadingMsg.remove();
+                
+                // Ajouter la réponse
+                let responseContent = data.answer;
+                let badges = [];
+                
+                if (data.cached) badges.push('💾 Cache');
+                if (data.sources_used && data.sources_used.length > 0) {
+                    badges.push(`📄 ${data.sources_used.length} sources`);
+                }
+                if (data.confidence) badges.push(`🎯 ${Math.round(data.confidence * 100)}%`);
+                
+                addMessage(responseContent, 'bot', null, badges);
+                
+                // Mettre à jour les stats
+                document.getElementById('responseTime').textContent = responseTime;
+                updateStats();
+                
+            } catch (error) {
+                console.error('Query error:', error);
+                const loadingMsg = document.getElementById(`msg-${loadingId}`);
+                if (loadingMsg) loadingMsg.remove();
+                addMessage('❌ Erreur lors de l\'analyse. Veuillez réessayer.', 'bot');
+            } finally {
+                isLoading = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
             }
         }
-
+        
+        // Ajouter un message au chat
+        function addMessage(content, type, id = null, badges = []) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            if (id) messageDiv.id = `msg-${id}`;
+            
+            let badgesHtml = '';
+            if (badges.length > 0) {
+                badgesHtml = badges.map(badge => `<span class="source-badge">${badge}</span>`).join('');
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                ${badgesHtml ? `<div class="message-meta">${badgesHtml}</div>` : ''}
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        // Exemples de questions
+        function askExample(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
+        
+        // Mettre à jour la liste des documents
+        function updateDocumentsList() {
+            const listDiv = document.getElementById('documentsList');
+            
+            if (uploadedDocuments.length === 0) {
+                listDiv.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">Aucun document uploadé</div>';
+                return;
+            }
+            
+            listDiv.innerHTML = uploadedDocuments.map(doc => `
+                <div class="document-item">
+                    <div>
+                        <div class="document-name">${doc.filename}</div>
+                        <div class="document-size">${doc.chunks} chunks • ${formatBytes(doc.size)}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('docCount').textContent = uploadedDocuments.length;
+        }
+        
+        // Mettre à jour les statistiques
         async function updateStats() {
             try {
                 const response = await fetch(`${API_URL}/api/stats`);
                 const data = await response.json();
                 
-                totalQueriesSpan.textContent = data.total_queries;
-                cacheHitsSpan.textContent = data.cache_hits;
-            } catch (error) {
-                console.error('Erreur lors de la récupération des stats:', error);
-            }
-        }
-
-        async function sendQuestion() {
-            const question = questionInput.value.trim();
-            
-            if (!question || isLoading) return;
-            
-            isLoading = true;
-            sendButton.disabled = true;
-            
-            // Ajouter la question de l'utilisateur
-            addMessage(question, 'user');
-            
-            // Vider l'input
-            questionInput.value = '';
-            
-            // Afficher un loader
-            const loaderId = addLoader();
-            
-            try {
-                const startTime = performance.now();
-                
-                const response = await fetch(`${API_URL}/api/query`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        question: question,
-                        commune: 'Montpellier'
-                    })
-                });
-                
-                const endTime = performance.now();
-                const processingTime = Math.round(endTime - startTime);
-                
-                if (!response.ok) {
-                    throw new Error(`Erreur serveur: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Retirer le loader
-                removeLoader(loaderId);
-                
-                // Ajouter la réponse
-                let messageContent = data.answer;
-                if (data.cached) {
-                    messageContent += '\n<span class="cached-indicator">📦 Réponse depuis le cache</span>';
-                }
-                
-                addMessage(messageContent, 'bot');
-                
-                // Afficher le temps de traitement
-                processingTimeSpan.textContent = data.processing_time 
-                    ? `${Math.round(data.processing_time * 1000)}` 
-                    : processingTime;
-                
-                // Mettre à jour les stats
-                updateStats();
+                document.getElementById('queryCount').textContent = data.total_queries;
+                document.getElementById('cacheHits').textContent = data.cache_hits;
                 
             } catch (error) {
-                removeLoader(loaderId);
-                addMessage('❌ Désolé, une erreur est survenue. Veuillez réessayer.', 'bot');
-                console.error('Erreur:', error);
-            } finally {
-                isLoading = false;
-                sendButton.disabled = false;
-                questionInput.focus();
+                console.error('Stats error:', error);
             }
         }
-
-        function addMessage(text, type) {
-            const message = document.createElement('div');
-            message.className = `message ${type}-message`;
-            message.innerHTML = text;
-            chatBox.appendChild(message);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        
+        // Utilitaires
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
-
-        function addLoader() {
-            const loader = document.createElement('div');
-            loader.className = 'message bot-message';
-            loader.id = `loader-${Date.now()}`;
-            loader.innerHTML = '<div class="loader"></div> Recherche en cours...';
-            chatBox.appendChild(loader);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            return loader.id;
-        }
-
-        function removeLoader(loaderId) {
-            const loader = document.getElementById(loaderId);
-            if (loader) loader.remove();
-        }
-
-        function askSuggestion(question) {
-            questionInput.value = question;
-            sendQuestion();
-        }
-
-        // Ajouter des exemples de questions après un délai
-        setTimeout(() => {
-            addMessage(
-                `📘 Je peux répondre à des questions comme :
-                
-• Quelle est la hauteur maximale autorisée en zone UB ?
-• Puis-je construire une piscine en limite de propriété ?
-• Combien de places de parking pour un immeuble de bureaux ?
-• Quelle distance respecter par rapport à la voirie ?
-• Ai-je besoin d'un permis de construire pour mon projet ?
-                
-N'hésitez pas à me poser vos questions !`,
-                'bot'
-            );
-        }, 1500);
-
+        
+        // Initialisation
+        updateStats();
+        setInterval(updateStats, 10000);
+        
+        // Focus sur l'input
+        document.getElementById('chatInput').focus();
+        
         // Raccourcis clavier
         document.addEventListener('keydown', (e) => {
-            // Ctrl+K pour focus sur l'input
             if (e.ctrlKey && e.key === 'k') {
                 e.preventDefault();
-                questionInput.focus();
-            }
-            
-            // Échap pour vider l'input
-            if (e.key === 'Escape') {
-                questionInput.value = '';
+                document.getElementById('chatInput').focus();
             }
         });
-
-        // Gestion du focus
-        questionInput.focus();
     </script>
 </body>
 </html>
