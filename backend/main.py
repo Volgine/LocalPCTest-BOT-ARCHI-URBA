@@ -18,6 +18,7 @@ from groq import Groq
 import tiktoken
 import asyncio
 from datetime import datetime
+from rag_utils import retrieve_context, generate_llm_answer
 
 # Configuration
 load_dotenv()
@@ -296,34 +297,15 @@ async def query_urbanisme(request: QueryRequest):
     try:
         context = ""
         sources_used = []
-        
-        # Recherche dans le RAG si demandé
-        if request.use_context and collection.count() > 0:
-            # Recherche sémantique
-            results = collection.query(
-                query_texts=[request.question],
-                n_results=5,
-                where={"session_id": request.session_id or "global"} if request.session_id else None
-            )
-            
-            if results['documents'][0]:
-                context_parts = []
-                for i, doc in enumerate(results['documents'][0]):
-                    context_parts.append(f"[Source {i+1}]: {doc}")
-                    if results['metadatas'][0][i]['filename'] not in sources_used:
-                        sources_used.append(results['metadatas'][0][i]['filename'])
-                
-                context = "\n\n".join(context_parts)
-        
-        # Générer la réponse avec Groq ou mock
-        answer = await query_groq(request.question, context)
-        
-        # Calculer la confiance (basée sur la distance des embeddings si contexte)
+
+        if request.use_context:
+            snippets = retrieve_context(request.question)
+            if snippets:
+                context = "\n\n".join(f"[Snippet {i+1}]: {s}" for i, s in enumerate(snippets))
+
+        answer = await generate_llm_answer(request.question, context)
+
         confidence = None
-        if context and results['distances'][0]:
-            # Plus la distance est faible, plus la confiance est élevée
-            avg_distance = sum(results['distances'][0]) / len(results['distances'][0])
-            confidence = max(0.0, min(1.0, 1.0 - avg_distance))
         
         response_data = {
             "answer": answer,
