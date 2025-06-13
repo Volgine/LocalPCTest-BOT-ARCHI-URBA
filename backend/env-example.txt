@@ -4,7 +4,12 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 
 # API Keys
-GPU_API_KEY=your_api_key_here
+GROQ_API_KEY=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
+# Get your free API key at: https://console.groq.com/keys
+
+# Future APIs
+SOGEFI_API_KEY=
+GPU_API_KEY=
 
 # Environment
-ENVIRONMENT=development
+ENVIRONMENT=production
