@@ -303,7 +303,7 @@ async def query_urbanisme(request: QueryRequest):
             if snippets:
                 context = "\n\n".join(f"[Snippet {i+1}]: {s}" for i, s in enumerate(snippets))
 
-        answer = await generate_llm_answer(request.question, context)
+        answer = await generate_llm_answer(request.question, context, GROQ_API_KEY)
 
         confidence = None
         

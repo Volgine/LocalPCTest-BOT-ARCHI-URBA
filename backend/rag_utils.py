@@ -1,4 +1,3 @@
-import os
 import json
 from pathlib import Path
 from typing import List
@@ -10,9 +9,6 @@ import PyPDF2
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# Groq API key
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # Embedding model
 MODEL_NAME = "all-MiniLM-L6-v2"
@@ -105,13 +101,13 @@ def retrieve_context(question: str, top_k: int = 5) -> List[str]:
     return snippets
 
 
-async def generate_llm_answer(question: str, context: str) -> str:
+async def generate_llm_answer(question: str, context: str, api_key: str) -> str:
     """Call the Groq API using httpx and return the answer."""
-    if not GROQ_API_KEY:
+    if not api_key:
         return ""
 
     url = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {GROQ_API_KEY}"}
+    headers = {"Authorization": f"Bearer {api_key}"}
 
     messages = [
         {
