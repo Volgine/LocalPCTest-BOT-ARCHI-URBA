@@ -4,3 +4,6 @@ httpx==0.25.0
 python-dotenv==1.0.0
 redis==5.0.1
 pydantic==2.4.2
+langchain
+faiss-cpu
+openai
