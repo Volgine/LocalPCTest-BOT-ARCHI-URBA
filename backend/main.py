@@ -1,32 +1,40 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
 import json
 import redis
 import hashlib
-from typing import Optional
+from typing import Optional, List
 import os
 from dotenv import load_dotenv
 import logging
 import time
+import chromadb
+from chromadb.utils import embedding_functions
+import PyPDF2
+import docx
+from groq import Groq
+import tiktoken
+import asyncio
+from datetime import datetime
 
 # Configuration
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Assistant Urbanisme API", version="0.1.0")
+app = FastAPI(title="Assistant Urbanisme AI", version="2.0.0")
 
 # CORS pour le frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En production, spécifier les domaines autorisés
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Redis pour le cache (optionnel pour le test)
+# Redis pour le cache
 try:
     r = redis.Redis(
         host=os.getenv('REDIS_HOST', 'localhost'),
@@ -41,29 +49,133 @@ except Exception as e:
     cache_enabled = False
     logger.warning(f"⚠️ Redis non disponible - Mode sans cache: {e}")
 
-# Configuration API GPU
-GPU_API_BASE = "https://apicarto.ign.fr/api/gpu"
-GPU_API_KEY = os.getenv('GPU_API_KEY', '')
+# Configuration Groq
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+if GROQ_API_KEY:
+    groq_client = Groq(api_key=GROQ_API_KEY)
+    logger.info("✅ Groq configuré")
+else:
+    groq_client = None
+    logger.warning("⚠️ Groq non configuré - Mode simulation")
+
+# Configuration ChromaDB pour le RAG
+chroma_client = chromadb.PersistentClient(path="./chroma_db")
+embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+    model_name="all-MiniLM-L6-v2"
+)
+
+# Collection pour les documents d'urbanisme
+collection = chroma_client.get_or_create_collection(
+    name="urbanisme_docs",
+    embedding_function=embedding_function
+)
 
 # Modèles Pydantic
 class QueryRequest(BaseModel):
     question: str
     commune: Optional[str] = None
     parcelle: Optional[str] = None
+    use_context: bool = True
+    session_id: Optional[str] = None
 
 class QueryResponse(BaseModel):
     answer: str
     source: str
     cached: bool = False
     processing_time: Optional[float] = None
+    confidence: Optional[float] = None
+    sources_used: Optional[List[str]] = None
+
+class DocumentInfo(BaseModel):
+    filename: str
+    doc_type: str
+    size: int
+    chunks: int
+    upload_date: str
 
 class StatsResponse(BaseModel):
     total_queries: int
     cache_hits: int
     api_calls: int
+    documents_indexed: int
     cache_enabled: bool
+    ai_model: str
 
 # Fonctions utilitaires
+def extract_text_from_pdf(file_content: bytes) -> str:
+    """Extrait le texte d'un PDF"""
+    try:
+        pdf_reader = PyPDF2.PdfReader(file_content)
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() + "\n"
+        return text
+    except Exception as e:
+        logger.error(f"Erreur extraction PDF: {e}")
+        return ""
+
+def extract_text_from_docx(file_content: bytes) -> str:
+    """Extrait le texte d'un DOCX"""
+    try:
+        doc = docx.Document(file_content)
+        text = ""
+        for paragraph in doc.paragraphs:
+            text += paragraph.text + "\n"
+        return text
+    except Exception as e:
+        logger.error(f"Erreur extraction DOCX: {e}")
+        return ""
+
+def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
+    """Divise le texte en chunks avec overlap"""
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        start = end - overlap
+    return chunks
+
+async def query_groq(prompt: str, context: str = "") -> str:
+    """Interroge Groq avec le contexte RAG"""
+    if not groq_client:
+        return generate_mock_response(prompt)
+    
+    try:
+        messages = [
+            {
+                "role": "system",
+                "content": """Tu es un assistant expert en urbanisme et architecture. 
+                Tu utilises le contexte fourni pour répondre de manière précise et technique.
+                Si le contexte ne contient pas l'information, tu l'indiques clairement."""
+            }
+        ]
+        
+        if context:
+            messages.append({
+                "role": "user",
+                "content": f"Contexte des documents:\n{context}\n\nQuestion: {prompt}"
+            })
+        else:
+            messages.append({
+                "role": "user",
+                "content": prompt
+            })
+        
+        completion = groq_client.chat.completions.create(
+            model="mixtral-8x7b-32768",
+            messages=messages,
+            temperature=0.3,
+            max_tokens=1024
+        )
+        
+        return completion.choices[0].message.content
+        
+    except Exception as e:
+        logger.error(f"Erreur Groq: {e}")
+        return generate_mock_response(prompt)
+
 def get_cache_key(query: str) -> str:
     """Génère une clé de cache unique"""
     return f"urbanisme:{hashlib.md5(query.encode()).hexdigest()}"
@@ -76,21 +188,13 @@ def increment_stat(stat_name: str):
         except:
             pass
 
-# Middleware pour logger les requêtes
-@app.middleware("http")
-async def log_requests(request, call_next):
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    logger.info(f"{request.method} {request.url.path} - {process_time:.3f}s")
-    return response
-
 # Routes
 @app.get("/")
 async def read_root():
     return {
-        "message": "Assistant Urbanisme POC - API Ready! 🏗️",
-        "version": "0.1.0",
+        "message": "Assistant Urbanisme AI 2.0 - Powered by RAG & Groq 🏗️",
+        "version": "2.0.0",
+        "features": ["RAG", "Document Upload", "AI Chat", "Cache"],
         "docs": "/docs"
     }
 
@@ -99,21 +203,84 @@ async def health_check():
     return {
         "status": "healthy",
         "cache": "enabled" if cache_enabled else "disabled",
-        "gpu_api": "configured" if GPU_API_KEY else "not configured"
+        "ai_model": "groq" if groq_client else "simulation",
+        "rag": "chromadb",
+        "documents": collection.count()
     }
+
+@app.post("/api/upload", response_model=DocumentInfo)
+async def upload_document(
+    file: UploadFile = File(...),
+    session_id: Optional[str] = None
+):
+    """Upload et indexe un document dans le RAG"""
+    try:
+        # Lire le fichier
+        content = await file.read()
+        filename = file.filename
+        
+        # Extraire le texte selon le type
+        if filename.lower().endswith('.pdf'):
+            text = extract_text_from_pdf(content)
+            doc_type = "pdf"
+        elif filename.lower().endswith('.docx'):
+            text = extract_text_from_docx(content)
+            doc_type = "docx"
+        elif filename.lower().endswith('.txt'):
+            text = content.decode('utf-8')
+            doc_type = "txt"
+        else:
+            raise HTTPException(status_code=400, detail="Format non supporté")
+        
+        if not text:
+            raise HTTPException(status_code=400, detail="Impossible d'extraire le texte")
+        
+        # Chunker le texte
+        chunks = chunk_text(text)
+        
+        # Indexer dans ChromaDB
+        ids = []
+        documents = []
+        metadatas = []
+        
+        for i, chunk in enumerate(chunks):
+            chunk_id = f"{filename}_{i}_{session_id or 'global'}"
+            ids.append(chunk_id)
+            documents.append(chunk)
+            metadatas.append({
+                "filename": filename,
+                "chunk_index": i,
+                "session_id": session_id or "global",
+                "upload_date": datetime.now().isoformat()
+            })
+        
+        collection.add(
+            documents=documents,
+            ids=ids,
+            metadatas=metadatas
+        )
+        
+        return DocumentInfo(
+            filename=filename,
+            doc_type=doc_type,
+            size=len(content),
+            chunks=len(chunks),
+            upload_date=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Erreur upload: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/query", response_model=QueryResponse)
 async def query_urbanisme(request: QueryRequest):
-    """
-    Endpoint principal pour les questions d'urbanisme
-    """
+    """Endpoint principal pour les questions d'urbanisme avec RAG"""
     start_time = time.time()
     
-    # Incrémenter le compteur total
     increment_stat("total")
     
     # Vérifier le cache
-    cache_key = get_cache_key(f"{request.commune}:{request.question}")
+    cache_key = get_cache_key(f"{request.commune}:{request.question}:{request.use_context}")
     
     if cache_enabled:
         cached_result = r.get(cache_key)
@@ -124,19 +291,46 @@ async def query_urbanisme(request: QueryRequest):
             data['processing_time'] = time.time() - start_time
             return QueryResponse(**data)
     
-    # Incrémenter les appels API
     increment_stat("api_calls")
     
     try:
-        # TODO: Intégrer la vraie API GPU ici
-        # Pour le POC, on simule des réponses intelligentes
+        context = ""
+        sources_used = []
         
-        answer = generate_mock_response(request.question, request.commune)
+        # Recherche dans le RAG si demandé
+        if request.use_context and collection.count() > 0:
+            # Recherche sémantique
+            results = collection.query(
+                query_texts=[request.question],
+                n_results=5,
+                where={"session_id": request.session_id or "global"} if request.session_id else None
+            )
+            
+            if results['documents'][0]:
+                context_parts = []
+                for i, doc in enumerate(results['documents'][0]):
+                    context_parts.append(f"[Source {i+1}]: {doc}")
+                    if results['metadatas'][0][i]['filename'] not in sources_used:
+                        sources_used.append(results['metadatas'][0][i]['filename'])
+                
+                context = "\n\n".join(context_parts)
+        
+        # Générer la réponse avec Groq ou mock
+        answer = await query_groq(request.question, context)
+        
+        # Calculer la confiance (basée sur la distance des embeddings si contexte)
+        confidence = None
+        if context and results['distances'][0]:
+            # Plus la distance est faible, plus la confiance est élevée
+            avg_distance = sum(results['distances'][0]) / len(results['distances'][0])
+            confidence = max(0.0, min(1.0, 1.0 - avg_distance))
         
         response_data = {
             "answer": answer,
-            "source": "GPU - Géoportail de l'Urbanisme (simulé)",
-            "cached": False
+            "source": "RAG + Groq AI" if context else "Groq AI",
+            "cached": False,
+            "confidence": confidence,
+            "sources_used": sources_used if sources_used else None
         }
         
         # Mettre en cache pour 24h
@@ -160,7 +354,9 @@ async def get_stats():
         "total_queries": 0,
         "cache_hits": 0,
         "api_calls": 0,
-        "cache_enabled": cache_enabled
+        "documents_indexed": collection.count(),
+        "cache_enabled": cache_enabled,
+        "ai_model": "groq" if groq_client else "simulation"
     }
     
     if cache_enabled:
@@ -173,75 +369,72 @@ async def get_stats():
     
     return StatsResponse(**stats)
 
-@app.delete("/api/cache")
-async def clear_cache():
-    """Vider le cache (admin only)"""
-    if cache_enabled:
-        try:
-            # Récupérer toutes les clés urbanisme:*
-            keys = r.keys("urbanisme:*")
-            if keys:
-                r.delete(*keys)
-            return {"message": f"Cache vidé: {len(keys)} entrées supprimées"}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-    else:
-        return {"message": "Cache non activé"}
+@app.delete("/api/documents/{session_id}")
+async def clear_session_documents(session_id: str):
+    """Supprime les documents d'une session"""
+    try:
+        # Récupérer les IDs des documents de la session
+        results = collection.get(
+            where={"session_id": session_id}
+        )
+        
+        if results['ids']:
+            collection.delete(ids=results['ids'])
+            return {"message": f"{len(results['ids'])} documents supprimés"}
+        else:
+            return {"message": "Aucun document trouvé pour cette session"}
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-def generate_mock_response(question: str, commune: Optional[str] = None) -> str:
-    """
-    Génère des réponses simulées pour le POC
-    TODO: Remplacer par l'intégration réelle GPU + IA
-    """
+def generate_mock_response(question: str) -> str:
+    """Génère des réponses simulées améliorées"""
     q_lower = question.lower()
     
-    # Réponses contextuelles basées sur les mots-clés
-    if "hauteur" in q_lower:
-        if "maximum" in q_lower or "maximale" in q_lower:
-            return "La hauteur maximale autorisée dans cette zone est de 12 mètres (R+3), mesurée depuis le terrain naturel jusqu'au faîtage du toit."
-        else:
-            return "Les règles de hauteur varient selon le zonage. En zone UA centre-ville : 15m max, en zone UB : 12m max, en zone UC : 9m max."
-    
-    elif "zone" in q_lower or "zonage" in q_lower:
-        if commune and commune.lower() == "montpellier":
-            return "Cette parcelle est située en zone UB - Zone urbaine mixte à dominante résidentielle. Les constructions à usage d'habitation, de commerce et de bureau y sont autorisées."
-        else:
-            return "Le zonage dépend de la commune et du PLU en vigueur. Les principales zones sont : UA (centre-ville), UB (urbain mixte), UC (pavillonnaire), N (naturelle), A (agricole)."
-    
-    elif "emprise" in q_lower or "sol" in q_lower:
-        return "L'emprise au sol maximale est de 60% de la surface de la parcelle en zone UB. Cela inclut l'ensemble des constructions, y compris les annexes."
-    
-    elif "limite" in q_lower and "propriété" in q_lower:
-        return "En zone UB, les constructions peuvent être implantées soit en limite séparative, soit avec un recul minimum de 3 mètres. La hauteur en limite ne peut excéder 3,50 mètres."
-    
-    elif "stationnement" in q_lower or "parking" in q_lower:
-        return "Le nombre de places de stationnement requis dépend de l'usage : Pour l'habitat : 1 place par logement jusqu'à 50m², 2 places au-delà. Pour les bureaux : 1 place pour 50m² de surface de plancher."
-    
-    elif "permis" in q_lower and "construire" in q_lower:
-        return "Un permis de construire est nécessaire pour toute construction nouvelle de plus de 20m² (ou 40m² en zone urbaine avec PLU). Le délai d'instruction est de 2 mois pour une maison individuelle."
-    
-    elif "piscine" in q_lower:
-        return "Une piscine de plus de 10m² nécessite une déclaration préalable (jusqu'à 100m²) ou un permis de construire (au-delà). Elle doit respecter un recul de 3m minimum des limites séparatives."
-    
-    elif "clôture" in q_lower:
-        return "La hauteur maximale des clôtures est généralement de 2 mètres. En limite de voie publique, une partie pleine de 0,80m maximum peut être surmontée d'un dispositif ajouré."
-    
-    elif "recul" in q_lower or "retrait" in q_lower:
-        return "Le recul par rapport à la voirie est généralement de 5 mètres minimum en zone UB. Par rapport aux limites séparatives : soit en limite, soit à une distance égale à la moitié de la hauteur avec un minimum de 3 mètres."
-    
-    else:
-        # Réponse générique
-        return f"""Je peux vous aider avec les questions sur :
+    # Base de réponses plus élaborées
+    responses = {
+        "hauteur": """D'après la réglementation en vigueur :
         
-• Le zonage et les règles associées
-• Les hauteurs maximales autorisées
-• L'emprise au sol et les distances aux limites
-• Les règles de stationnement
-• Les autorisations nécessaires (permis de construire, déclaration préalable)
+        • Zone UA (centre-ville) : 15m max (R+4)
+        • Zone UB (urbain mixte) : 12m max (R+3)  
+        • Zone UC (pavillonnaire) : 9m max (R+2)
+        • Zone UE (activités) : 12m max sauf dérogation
+        
+        La hauteur se mesure depuis le terrain naturel jusqu'au faîtage.""",
+        
+        "emprise": """L'emprise au sol maximale autorisée :
+        
+        • Zone UA : 80% de la parcelle
+        • Zone UB : 60% de la parcelle
+        • Zone UC : 40% de la parcelle
+        • Zone N/A : 20% maximum
+        
+        Incluant toutes constructions et annexes.""",
+        
+        "recul": """Les règles de recul obligatoires :
+        
+        • Voirie : 5m minimum (3m en UA)
+        • Limites séparatives : H/2 min 3m
+        • Fond de parcelle : 5m minimum
+        • Entre bâtiments : H+3m minimum""",
+        
+        "default": """Je peux vous aider sur :
+        
+        • Règles de hauteur et gabarit
+        • Emprise au sol et COS
+        • Distances et prospects
+        • Zonage PLU/PLUi
+        • Autorisations d'urbanisme
+        
+        Précisez votre question ou uploadez vos documents PLU."""
+    }
+    
+    for key, response in responses.items():
+        if key in q_lower:
+            return response
+    
+    return responses["default"]
 
-Précisez votre question et indiquez si possible la commune et/ou la référence cadastrale concernée."""
-
-# Pour tester localement
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
