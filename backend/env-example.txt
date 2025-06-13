@@ -10,5 +10,7 @@ GPU_API_KEY=your_api_key_here
 ENVIRONMENT=development
 
 # OpenAI / Vector Store
+# Clé API OpenAI pour générer les embeddings et répondre aux requêtes
 OPENAI_API_KEY=
+# Chemin vers l'index FAISS généré via build_index.py
 VECTOR_STORE_PATH=./data/index.faiss

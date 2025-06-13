@@ -28,11 +28,40 @@ Test complet de l'application sur votre PC Windows en local, sans déploiement c
 - Message "Installation terminée !" s'affiche
 
 ### 4. **Configuration IA**
-Ajoutez vos clés dans `/backend/.env` :
+Ajoutez vos clés dans `/backend/.env` et configurez l'index vectoriel :
 
 ```env
 OPENAI_API_KEY=
 VECTOR_STORE_PATH=./data/index.faiss
+```
+
+Installez également les dépendances LLM/RAG (langchain, faiss-cpu, openai, tqdm)
+si ce n'est pas déjà fait :
+
+```bash
+cd backend
+venv\Scripts\activate  # ou `source venv/bin/activate` sous Linux/Mac
+pip install -r requirements.txt
+```
+
+#### Construction de l'index FAISS
+
+Placez vos documents `.txt` dans un dossier (par ex. `./docs`) puis générez
+l'index vectoriel :
+
+```bash
+python build_index.py ./docs ./data/index.faiss
+```
+
+L'API détectera automatiquement l'index et utilisera le mode RAG pour répondre
+aux questions si `OPENAI_API_KEY` est défini.
+
+Exemple de démarrage manuel du backend avec RAG activé :
+
+```bash
+cd backend
+venv\Scripts\activate
+uvicorn main:app --reload
 ```
 
 ---
