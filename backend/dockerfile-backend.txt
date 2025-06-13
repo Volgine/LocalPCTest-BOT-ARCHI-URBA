@@ -1,21 +1,15 @@
-FROM python:3.11-slim
+# Redis Configuration (optional)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
 
-WORKDIR /app
+# API Keys
+GROQ_API_KEY=gsk_YOUR_GROQ_API_KEY_HERE
+# Get your free API key at: https://console.groq.com/keys
 
-# Installation des dépendances système
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Future APIs
+SOGEFI_API_KEY=
+GPU_API_KEY=
 
-# Copie des requirements et installation
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copie du code
-COPY . .
-
-# Exposition du port
-EXPOSE 8000
-
-# Commande de démarrage
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Environment
+ENVIRONMENT=production
