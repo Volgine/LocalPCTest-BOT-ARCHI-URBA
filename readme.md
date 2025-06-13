@@ -48,10 +48,10 @@ start.bat
 ### Frontend (Vercel)
 1. Importer sur Vercel
 2. Root directory : `frontend`
-3. Modifier `API_URL` dans index.html : l370
-   ```javascript
-   const API_URL = 'https://votre-app.up.railway.app';
-   ```
+3. Modifier `API_URL` dans index.html : L594
+  const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : localpctest-esemple.up.railway.app;
 4. Deploy!
 
 ## 🔑 Obtenir Groq API Key
