@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import httpx
 import json
 import redis
 import hashlib
@@ -16,7 +15,6 @@ import PyPDF2
 import io
 import docx
 from groq import Groq
-import asyncio
 from datetime import datetime
 from rag_utils import retrieve_context, generate_llm_answer
 
