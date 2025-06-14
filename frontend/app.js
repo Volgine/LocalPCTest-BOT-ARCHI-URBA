@@ -252,6 +252,12 @@ async function updateStats() {
 
         document.getElementById('queryCount').textContent = data.total_queries;
         document.getElementById('cacheHits').textContent = data.cache_hits;
+        if (document.getElementById('apiCalls')) {
+            document.getElementById('apiCalls').textContent = data.api_calls;
+        }
+        if (document.getElementById('documentsIndexed')) {
+            document.getElementById('documentsIndexed').textContent = data.documents_indexed;
+        }
 
     } catch (error) {
         console.error('Stats error:', error);
