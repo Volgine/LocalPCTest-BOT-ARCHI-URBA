@@ -7,131 +7,120 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    
+    <nav class="navbar">
+        <div class="nav-brand">URBA.AI</div>
+        <ul class="nav-links">
+            <li><a href="#">Accueil</a></li>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">Support</a></li>
+        </ul>
+    </nav>
     <div class="main-container">
-        <header class="header">
-            <h1 class="logo">URBA.AI</h1>
-            <p class="tagline">Assistant Architecture & Urbanisme Neural</p>
-        </header>
-        
-        <div class="chat-interface">
-            <!-- Chat Panel -->
-            <div class="chat-panel holo-effect">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="message bot">
-                        <div class="message-content">
-                            Bienvenue dans URBA.AI 🏗️
-                            
+        <div class="page-layout">
+            <aside class="sidebar">
+                <ul class="menu">
+                    <li>🏠 Dashboard</li>
+                    <li>📁 Documents</li>
+                    <li>⚙️ Paramètres</li>
+                </ul>
+            </aside>
+            <div class="chat-interface">
+                <div class="chat-panel holo-effect">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot">
+                            <div class="message-content">
+                                Bienvenue dans URBA.AI 🏗️
+
 Je suis votre assistant spécialisé en urbanisme et architecture, équipé d'une IA avancée et d'un système RAG pour analyser vos documents.
 
 Comment puis-je vous aider aujourd'hui ?
+                            </div>
+                            <div class="message-meta">
+                                <span class="source-badge">🤖 System</span>
+                            </div>
                         </div>
-                        <div class="message-meta">
-                            <span class="source-badge">🤖 System</span>
+                    </div>
+                    <div class="input-area">
+                        <div class="input-wrapper">
+                            <input type="file" id="fileInput" accept=".pdf,.docx,.txt" style="display:none;">
+                            <button class="upload-button" onclick="document.getElementById('fileInput').click()">📁 Upload</button>
+                            <input type="text" class="chat-input" id="chatInput" placeholder="Posez votre question sur l'urbanisme..." onkeypress="if(event.key === 'Enter' && !event.shiftKey) sendMessage()">
+                            <button class="cyber-button" id="sendButton" onclick="sendMessage()">Analyser</button>
                         </div>
                     </div>
                 </div>
-                
-                <div class="input-area">
-                    <div class="input-wrapper">
-                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" style="display: none;">
-                        <button class="upload-button" onclick="document.getElementById('fileInput').click()">
-                            📁 Upload
-                        </button>
-                        <input 
-                            type="text" 
-                            class="chat-input" 
-                            id="chatInput" 
-                            placeholder="Posez votre question sur l'urbanisme..."
-                            onkeypress="if(event.key === 'Enter' && !event.shiftKey) sendMessage()"
-                        >
-                        <button class="cyber-button" id="sendButton" onclick="sendMessage()">
-                            Analyser
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Info Panel -->
-            <div class="info-panel">
-                <!-- Stats Section -->
-                <div class="panel-section">
-                    <h3 class="section-title">📊 Statistiques</h3>
-                    <div id="error-message" class="error-message" style="display:none;" role="alert">Erreur de connexion API</div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value" id="queryCount">0</span>
-                            <span class="stat-label">Requêtes</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="docCount">0</span>
-                            <span class="stat-label">Documents</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="cacheHits">0</span>
-                            <span class="stat-label">Cache Hits</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="apiCalls">0</span>
-                            <span class="stat-label">Appels API</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="documentsIndexed">0</span>
-                            <span class="stat-label">Docs indexés</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="responseTime">0</span>
-                            <span class="stat-label">ms</span>
+                <div class="info-panel">
+                    <div class="panel-section">
+                        <h3 class="section-title">📊 Statistiques</h3>
+                        <div id="error-message" class="error-message" style="display:none;" role="alert">Erreur de connexion API</div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value" id="queryCount">0</span>
+                                <span class="stat-label">Requêtes</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="docCount">0</span>
+                                <span class="stat-label">Documents</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="cacheHits">0</span>
+                                <span class="stat-label">Cache Hits</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="apiCalls">0</span>
+                                <span class="stat-label">Appels API</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="documentsIndexed">0</span>
+                                <span class="stat-label">Docs indexés</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="responseTime">0</span>
+                                <span class="stat-label">ms</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Features Section -->
-                <div class="panel-section">
-                    <h3 class="section-title">🚀 Fonctionnalités</h3>
-                    <div class="feature-item" onclick="askExample('hauteur maximale zone UB')">
-                        <div class="feature-icon">📏</div>
-                        <div>
-                            <div style="font-weight: 600;">Hauteurs & Gabarits</div>
-                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Règles de construction</div>
+                    <div class="panel-section">
+                        <h3 class="section-title">🚀 Fonctionnalités</h3>
+                        <div class="feature-item" onclick="askExample('hauteur maximale zone UB')">
+                            <div class="feature-icon">📏</div>
+                            <div>
+                                <div style="font-weight: 600;">Hauteurs & Gabarits</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Règles de construction</div>
+                            </div>
+                        </div>
+                        <div class="feature-item" onclick="askExample('emprise au sol autorisée')">
+                            <div class="feature-icon">📐</div>
+                            <div>
+                                <div style="font-weight: 600;">Emprise au Sol</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Surfaces constructibles</div>
+                            </div>
+                        </div>
+                        <div class="feature-item" onclick="askExample('règles de stationnement bureaux')">
+                            <div class="feature-icon">🚗</div>
+                            <div>
+                                <div style="font-weight: 600;">Stationnement</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Normes parking</div>
+                            </div>
+                        </div>
+                        <div class="feature-item" onclick="askExample('permis de construire nécessaire')">
+                            <div class="feature-icon">📋</div>
+                            <div>
+                                <div style="font-weight: 600;">Autorisations</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">PC, DP, PA</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="feature-item" onclick="askExample('emprise au sol autorisée')">
-                        <div class="feature-icon">📐</div>
-                        <div>
-                            <div style="font-weight: 600;">Emprise au Sol</div>
-                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Surfaces constructibles</div>
-                        </div>
-                    </div>
-                    <div class="feature-item" onclick="askExample('règles de stationnement bureaux')">
-                        <div class="feature-icon">🚗</div>
-                        <div>
-                            <div style="font-weight: 600;">Stationnement</div>
-                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Normes parking</div>
-                        </div>
-                    </div>
-                    <div class="feature-item" onclick="askExample('permis de construire nécessaire')">
-                        <div class="feature-icon">📋</div>
-                        <div>
-                            <div style="font-weight: 600;">Autorisations</div>
-                            <div style="font-size: 0.875rem; color: var(--text-secondary);">PC, DP, PA</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Documents Section -->
-                <div class="panel-section">
-                    <h3 class="section-title">📄 Documents</h3>
-                    <div id="documentsList">
-                        <div style="color: var(--text-secondary); text-align: center; padding: 20px;">
-                            Aucun document uploadé
+                    <div class="panel-section">
+                        <h3 class="section-title">📄 Documents</h3>
+                        <div id="documentsList">
+                            <div style="color: var(--text-secondary); text-align: center; padding: 20px;">Aucun document uploadé</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
     <script src="js/main.js"></script>
 </body>
 </html>
