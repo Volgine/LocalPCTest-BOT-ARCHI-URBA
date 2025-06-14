@@ -253,6 +253,28 @@ body {
     display: none;
 }
 
+/* Quick actions */
+.quick-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.quick-action {
+    background: rgba(0, 224, 255, 0.1);
+    border: 1px solid var(--primary-neon);
+    color: var(--primary-neon);
+    padding: 6px 12px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background 0.3s;
+}
+
+.quick-action:hover {
+    background: rgba(0, 224, 255, 0.2);
+}
+
 /* Right Panel - Info */
 .info-panel {
     flex: 1;
@@ -374,6 +396,33 @@ body {
 .document-size {
     font-size: 0.875rem;
     color: var(--text-secondary);
+}
+
+/* Project cards */
+.project-card {
+    background: rgba(0, 224, 255, 0.05);
+    border: 1px solid rgba(0, 224, 255, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.project-card:hover {
+    background: rgba(0, 224, 255, 0.1);
+}
+
+.preview-3d {
+    height: 150px;
+    background: rgba(0, 224, 255, 0.05);
+    border: 1px solid rgba(0, 224, 255, 0.2);
+    margin-top: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
 }
 
 /* Loading Animation */

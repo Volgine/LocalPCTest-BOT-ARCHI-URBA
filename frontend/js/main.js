@@ -26,40 +26,44 @@ function generateSessionId() {
 }
 
 // Gestion des fichiers
-document.getElementById('fileInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
+async function uploadFile(file) {
     if (!file) return;
-    
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('session_id', sessionId);
-    
+
     const uploadButton = document.querySelector('.upload-button');
     uploadButton.textContent = '⏳ Upload...';
     uploadButton.disabled = true;
-    
+
     try {
         const response = await fetch(`${API_URL}/api/upload`, {
             method: 'POST',
             body: formData
         });
-        
+
         if (!response.ok) throw new Error('Upload failed');
-        
+
         const data = await response.json();
         uploadedDocuments.push(data);
         updateDocumentsList();
-        
+
         addMessage(`📄 Document "${data.filename}" uploadé avec succès (${data.chunks} chunks indexés)`, 'system');
-        
+
     } catch (error) {
         console.error('Upload error:', error);
         addMessage('❌ Erreur lors de l\'upload du document', 'system');
     } finally {
         uploadButton.textContent = '📁 Upload';
         uploadButton.disabled = false;
-        e.target.value = '';
     }
+}
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    await uploadFile(file);
+    e.target.value = '';
 });
 
 // Envoyer un message
@@ -78,7 +82,7 @@ async function sendMessage() {
     
     // Ajouter un message de chargement
     const loadingId = Date.now();
-    addMessage(`<span class="loading-dots">Analyse en cours</span>`, 'bot', loadingId);
+    addMessage(`<span class="loading-dots">Analyse en cours</span>`, 'bot', loadingId, [], true);
     
     try {
         const startTime = Date.now();
@@ -133,7 +137,7 @@ async function sendMessage() {
 }
 
 // Ajouter un message au chat
-function addMessage(content, type, id = null, badges = []) {
+function addMessage(content, type, id = null, badges = [], allowHtml = false) {
     const messagesDiv = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
@@ -141,7 +145,11 @@ function addMessage(content, type, id = null, badges = []) {
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
-    contentDiv.textContent = content;
+    if (allowHtml) {
+        contentDiv.innerHTML = content;
+    } else {
+        contentDiv.textContent = content;
+    }
     messageDiv.appendChild(contentDiv);
 
     if (badges.length > 0) {
@@ -237,3 +245,62 @@ document.addEventListener('keydown', (e) => {
         document.getElementById('chatInput').focus();
     }
 });
+
+// Quick actions
+function quickAction(text) {
+    document.getElementById('chatInput').value = text;
+    sendMessage();
+}
+
+// Feasibility study management
+function addFeasibilityStudy(name) {
+    const list = document.getElementById('projectList');
+    if (!list) return;
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.textContent = name;
+    card.dataset.action = `Étude de faisabilité pour ${name}`;
+    card.addEventListener('click', () => {
+        quickAction(card.dataset.action);
+        init3DPreview(name);
+    });
+    list.appendChild(card);
+}
+
+function init3DPreview(project) {
+    const preview = document.getElementById('preview3d');
+    if (preview) {
+        preview.textContent = `Prévisualisation 3D pour ${project}...`;
+    }
+}
+
+// Event bindings
+document.querySelectorAll('.quick-action').forEach(btn => {
+    btn.addEventListener('click', () => quickAction(btn.dataset.action));
+});
+
+document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('click', () => {
+        quickAction(card.dataset.action || card.textContent);
+        init3DPreview(card.textContent);
+    });
+});
+
+const uploadZone = document.getElementById('uploadZone');
+if (uploadZone) {
+    ['dragover', 'drop'].forEach(event => {
+        uploadZone.addEventListener(event, e => e.preventDefault());
+    });
+    uploadZone.addEventListener('drop', e => {
+        const file = e.dataTransfer.files[0];
+        uploadFile(file);
+    });
+}
+
+// Demo project card
+if (document.getElementById('addStudyBtn')) {
+    document.getElementById('addStudyBtn').addEventListener('click', () => {
+        const name = prompt('Nom du projet ?');
+        if (name) addFeasibilityStudy(name);
+    });
+}
