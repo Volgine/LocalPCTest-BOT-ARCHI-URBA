@@ -42,6 +42,14 @@ si ce n'est pas déjà fait :
 cd backend
 venv\Scripts\activate  # ou `source venv/bin/activate` sous Linux/Mac
 pip install -r requirements.txt
+
+```
+
+### Installation des dépendances de test
+Si vous souhaitez exécuter les tests, installez également :
+
+```bash
+pip install -r requirements-test.txt
 ```
 
 #### Construction de l'index FAISS
