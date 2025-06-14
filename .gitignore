@@ -72,3 +72,9 @@ yarn-error.log*
 # ------------------------
 .railway/
 .vercel/
+
+# ------------------------
+# 🔹 Bases de données
+# ------------------------
+# Dossier utilisé par ChromaDB pour persister les vecteurs du RAG
+backend/chroma_db/
