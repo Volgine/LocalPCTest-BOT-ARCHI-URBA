@@ -7,6 +7,7 @@
 # - Sentence-Transformers : génération d’embeddings de texte.
 # - ChromaDB : base de données vectorielle (stockage d’embeddings).
 # - tiktoken : tokenisation pour modèles OpenAI.
+numpy<2
 fastapi==0.115.9
 pydantic==2.11.5
 langchain==0.3.25
