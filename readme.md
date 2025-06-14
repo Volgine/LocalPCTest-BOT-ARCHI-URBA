@@ -12,6 +12,9 @@
 - **Design cyberpunk** : Néon, glassmorphism
 - **Interface interactive** : Animations fluides
 - **Dashboard stats** : Temps réel
+- **Sidebar projets** : Navigation "Dashboard", "Documents" et "Paramètres" plus un panneau "Projets"
+- **Quick actions** : Boutons "Résumé" et "Contraintes" pour lancer instantanément une analyse
+- **Canvas 3D** : `main.js` initialise désormais un canvas pour prévisualiser les projets
 
 ## 📦 Installation locale
 
