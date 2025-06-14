@@ -127,12 +127,7 @@ Les tests unitaires utilisent `pytest`. Installez d'abord les dépendances de
 développement&nbsp;:
 
 ```bash
-pip install -r requirements-dev.txt
-```
-
-Puis exécutez les tests depuis la racine du projet&nbsp;:
-
-```bash
+pip install -r backend/requirements.txt -r requirements-dev.txt
 pytest -q
 ```
 
