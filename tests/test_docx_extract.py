@@ -2,6 +2,7 @@ import io
 import ast
 import types
 from pathlib import Path
+from docx import Document
 
 def get_extract_function(dummy_doc):
     source = Path('backend/main.py').read_text()
@@ -24,3 +25,14 @@ def test_extract_text_from_docx_uses_bytesio():
     text = func(b'dummy')
     assert text.strip() == 'hello'
     assert captured['type'] is io.BytesIO
+
+
+def test_extract_text_from_docx_with_real_bytes():
+    buffer = io.BytesIO()
+    doc = Document()
+    doc.add_paragraph("hello world")
+    doc.save(buffer)
+
+    func = get_extract_function(Document)
+    text = func(buffer.getvalue())
+    assert "hello world" in text
