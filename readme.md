@@ -113,6 +113,18 @@ Dans `index.html` :
 - `/health` : État des services
 - Logs Railway : Temps réel
 
+## 🧪 Running tests
+
+Les tests unitaires nécessitent `pytest`. Depuis la racine du projet,
+exécutez&nbsp;:
+
+```bash
+pytest -q
+```
+
+Le script `tests/test-load.py` permet de lancer des tests de performance
+séparés pour évaluer la charge de l'API.
+
 ## 🐛 Troubleshooting
 
 ### "Groq rate limit"
