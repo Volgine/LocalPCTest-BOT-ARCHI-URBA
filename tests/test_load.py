@@ -3,7 +3,7 @@ import httpx
 import time
 import statistics
 
-async def test_endpoint(client, i):
+async def run_endpoint(client, i):
     """Test une requête unique et retourne le temps de réponse"""
     start = time.time()
     try:
@@ -26,11 +26,11 @@ async def load_test(num_requests=50):
     async with httpx.AsyncClient(timeout=30.0) as client:
         # Warmup
         print("⏳ Warmup...")
-        await test_endpoint(client, 0)
+        await run_endpoint(client, 0)
         
         # Test concurrent
         print("🔥 Test en cours...")
-        tasks = [test_endpoint(client, i) for i in range(num_requests)]
+        tasks = [run_endpoint(client, i) for i in range(num_requests)]
         results = await asyncio.gather(*tasks)
         
         # Analyse des résultats
@@ -63,7 +63,7 @@ async def stress_test():
         await load_test(num_requests)
         await asyncio.sleep(2)  # Pause entre les tests
 
-async def test_cache():
+async def run_cache_test():
     """Test spécifique du cache"""
     print("\n🔄 Test du cache\n")
     
@@ -120,10 +120,10 @@ Choisissez un test:
     elif choice == "2":
         asyncio.run(stress_test())
     elif choice == "3":
-        asyncio.run(test_cache())
+        asyncio.run(run_cache_test())
     elif choice == "4":
         asyncio.run(load_test())
-        asyncio.run(test_cache())
+        asyncio.run(run_cache_test())
         asyncio.run(stress_test())
     else:
         print("❌ Choix invalide")
