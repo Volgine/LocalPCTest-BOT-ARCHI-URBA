@@ -123,8 +123,14 @@ Dans `index.html` :
 
 ## 🧪 Running tests
 
-Les tests unitaires nécessitent `pytest`. Depuis la racine du projet,
-exécutez&nbsp;:
+Les tests unitaires utilisent `pytest`. Installez d'abord les dépendances de
+développement&nbsp;:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Puis exécutez les tests depuis la racine du projet&nbsp;:
 
 ```bash
 pytest -q
