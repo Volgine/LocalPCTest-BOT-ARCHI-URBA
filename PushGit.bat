@@ -1,6 +1,6 @@
 @echo off
 set COMMENT=auto: push depuis script
-set BRANCH=main
+set BRANCH=dev
 
 echo [GIT] Ajout des fichiers...
 git add .
