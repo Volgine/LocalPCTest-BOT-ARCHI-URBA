@@ -14,3 +14,11 @@ ENVIRONMENT=development
 OPENAI_API_KEY=
 # Chemin vers l'index FAISS généré via build_index.py
 VECTOR_STORE_PATH=./data/index.faiss
+
+# LLM Configuration
+# Provider can be 'openai', 'ollama', 'lm_studio', etc.
+LLM_PROVIDER=openai
+# Model name or path
+LLM_MODEL=
+# Embeddings model (optional)
+EMBEDDINGS_MODEL=
