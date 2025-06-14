@@ -1,104 +1,49 @@
-import json
-from pathlib import Path
 from typing import List
 
-import faiss
 import httpx
-from sentence_transformers import SentenceTransformer
-import PyPDF2
 from dotenv import load_dotenv
+
+import chromadb
+from chromadb.utils import embedding_functions
 
 load_dotenv()
 
-# Embedding model
 MODEL_NAME = "all-MiniLM-L6-v2"
-model = SentenceTransformer(MODEL_NAME)
-EMBED_DIM = model.get_sentence_embedding_dimension()
 
-# Paths for persistence
-INDEX_PATH = Path("faiss.index")
-DOCS_PATH = Path("faiss_docs.json")
+# ChromaDB collection (shared with main.py)
 
-# Load or initialize index
-if INDEX_PATH.exists():
-    index = faiss.read_index(str(INDEX_PATH))
-    if DOCS_PATH.exists():
-        documents = json.loads(DOCS_PATH.read_text())
-    else:
-        documents = []
-else:
-    index = faiss.IndexFlatL2(EMBED_DIM)
-    documents = []
+chroma_client = None
+_collection = None
 
 
-def _save_state() -> None:
-    """Persist the FAISS index and documents to disk."""
-    faiss.write_index(index, str(INDEX_PATH))
-    DOCS_PATH.write_text(json.dumps(documents))
+def get_collection():
+    """Lazily initialize and return the ChromaDB collection."""
+    global chroma_client, _collection
+    if _collection is None:
+        chroma_client = chromadb.PersistentClient(path="./chroma_db")
+        embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name=MODEL_NAME
+        )
+        _collection = chroma_client.get_or_create_collection(
+            name="urbanisme_docs",
+            embedding_function=embedding_function,
+        )
+    return _collection
 
 
-def _extract_text(path: str) -> str:
-    """Extract text from a txt or PDF file."""
-    if path.lower().endswith(".pdf"):
-        text = ""
-        with open(path, "rb") as f:
-            reader = PyPDF2.PdfReader(f)
-            for page in reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
-        return text
-    else:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
 
 
-def _chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
-    """Split text into overlapping chunks."""
-    chunks = []
-    start = 0
-    while start < len(text):
-        end = start + chunk_size
-        chunks.append(text[start:end])
-        start = end - overlap
-    return chunks
 
-
-def ingest_documents(path: str) -> None:
-    """Load documents from a file or directory and add them to the FAISS index."""
-    p = Path(path)
-    files = []
-    if p.is_dir():
-        for file in p.glob("**/*"):
-            if file.suffix.lower() in {".txt", ".pdf"}:
-                files.append(file)
-    else:
-        if p.suffix.lower() in {".txt", ".pdf"}:
-            files.append(p)
-
-    for file in files:
-        text = _extract_text(str(file))
-        if not text.strip():
-            continue
-        chunks = _chunk_text(text)
-        if not chunks:
-            continue
-        vectors = model.encode(chunks)
-        index.add(vectors.astype("float32"))
-        documents.extend(chunks)
-
-    if files:
-        _save_state()
 
 
 def retrieve_context(question: str, top_k: int = 5) -> List[str]:
-    """Return the most relevant snippets for a question."""
-    if index.ntotal == 0:
+    """Return the most relevant snippets for a question using ChromaDB."""
+    try:
+        col = get_collection()
+        results = col.query(query_texts=[question], n_results=top_k)
+        return results.get("documents", [[]])[0]
+    except Exception:
         return []
-    vector = model.encode([question]).astype("float32")
-    distances, idx = index.search(vector, top_k)
-    snippets = [documents[i] for i in idx[0] if i < len(documents)]
-    return snippets
 
 
 async def generate_llm_answer(question: str, context: str, api_key: str) -> str:
