@@ -1,59 +1,50 @@
 @echo off
-echo ========================================
-echo   Assistant Urbanisme - Installation
-echo ========================================
-echo.
+setlocal ENABLEEXTENSIONS
 
-:: Vérifier si Python est installé
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo [ERREUR] Python n'est pas installe !
-    echo Telecharge Python depuis : https://www.python.org/downloads/
+:: =====================================
+:: 🔧 INSTALL_ALL.BAT – SETUP COMPLET
+:: =====================================
+
+:: Aller dans le dossier backend
+cd /d "%~dp0backend"
+
+:: Créer le venv si absent
+if not exist ".venv" (
+    echo [INFO] Création du venv...
+    python -m venv .venv
+)
+
+:: Activer le venv
+call .venv\Scripts\activate
+
+:: Upgrade pip
+python -m pip install --upgrade pip >nul 2>&1
+
+:: Vérification du fichier de dépendances
+if not exist requirements.txt (
+    echo [ERREUR] Aucun fichier requirements.txt trouvé dans backend/.
+    echo [ABORT] Impossible d’installer sans dépendances définies.
     pause
-    exit /b 1
+    exit /b
 )
 
-echo [OK] Python est installe
-echo.
-
-:: Créer l'environnement virtuel
-echo Creation de l'environnement virtuel...
-cd backend
-if exist venv (
-    echo [INFO] L'environnement virtuel existe deja
-) else (
-    python -m venv venv
-    echo [OK] Environnement virtuel cree
-)
-
-:: Activer l'environnement et installer les dépendances
-echo.
-echo Installation des dependances Python...
-call venv\Scripts\activate.bat
+:: Installer les dépendances depuis requirements.txt
+echo [INFO] Installation des dépendances depuis requirements.txt...
 pip install -r requirements.txt
-echo [OK] Dependances installees
 
-:: Créer le fichier .env s'il n'existe pas
-if not exist .env (
-    echo.
-    echo Creation du fichier .env...
-    copy .env.example .env
-    echo [OK] Fichier .env cree - Pensez a ajouter vos cles API !
+:: Corriger torch GPU si cassé
+python -c "import torch" >nul 2>&1
+if errorlevel 1 (
+    echo [FIX] torch GPU détecté → reinstallation CPU
+    pip uninstall torch -y
+    pip install torch==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
 )
 
-:: Retour au dossier principal
+:: Retour racine + build Docker
 cd ..
+echo [DOCKER] Build image Docker...
+docker build -t bot-archi-backend .
 
 echo.
-echo ========================================
-echo   Installation terminee !
-echo ========================================
-echo.
-echo Pour lancer l'application :
-echo 1. Double-cliquez sur 'start.bat'
-echo.
-echo Ou manuellement :
-echo - Backend : cd backend puis uvicorn main:app --reload
-echo - Frontend : cd frontend puis python -m http.server 3000
-echo.
+echo [✅] INSTALLATION TERMINEE
 pause
