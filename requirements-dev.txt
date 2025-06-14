@@ -1,3 +1,4 @@
 # Packages used for development and tests only
 pytest
 pytest-asyncio
+python-docx
