@@ -16,7 +16,6 @@ import PyPDF2
 import io
 import docx
 from groq import Groq
-import tiktoken
 import asyncio
 from datetime import datetime
 from rag_utils import retrieve_context, generate_llm_answer
