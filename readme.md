@@ -51,10 +51,17 @@ python backend/main.py
 1. Importer sur Vercel
 2. Root directory : `frontend`
 3. Modifier `API_URL` dans index.html : ligne 131
-  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-  const API_URL = isLocal
-            ? 'http://localhost:8000'
-            : 'https://striking-clarity-actelle.up.railway.app';
+  ```javascript
+  const getApiUrl = () => {
+    const host = window.location.hostname;
+    if (['localhost', '127.0.0.1'].includes(host)) {
+      return 'http://localhost:8000';
+    }
+    return 'https://striking-clarity-actelle.up.railway.app';
+  };
+  const API_URL = getApiUrl();
+  console.log('Using API_URL:', API_URL);
+  ```
 4. Deploy!
 
 ## 🔑 Obtenir Groq API Key
