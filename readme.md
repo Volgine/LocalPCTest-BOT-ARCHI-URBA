@@ -25,8 +25,8 @@ cd LocalPCTest-BOT-ARCHI-URBA
 install.bat
 
 # 3. Configurer Groq
-# Copier backend/.env.example vers backend/.env
-# Ajouter votre clé Groq : https://console.groq.com/keys
+# Copier backend/env-example.txt vers backend/.env
+# Puis ajoutez votre clé Groq : https://console.groq.com/keys
 
 # 4. Lancer
 start.bat
