@@ -64,6 +64,22 @@ venv\Scripts\activate
 uvicorn main:app --reload
 ```
 
+### 5. **Activer le chatbot réel**
+Pour passer des réponses mockées au véritable modèle de langage :
+
+1. Installez les versions figées indispensables :
+   ```bash
+   pip install langchain==0.1.13 langsmith==0.0.70 pydantic==1.10.13
+   ```
+2. Renseignez les variables dans `backend/.env` :
+   ```env
+   LLM_PROVIDER=openai        # ou ollama, lm_studio...
+   LLM_API_KEY=VotreCleIci
+   LLM_MODEL=gpt-3.5-turbo
+   EMBEDDINGS_MODEL=text-embedding-ada-002
+   ```
+3. En alternative hors ligne, vous pouvez utiliser un LLM local comme [Ollama](https://github.com/ollama-ai/ollama) ou [LM Studio](https://lmstudio.ai).
+
 ---
 
 ## 🏃 Lancement de l'application
