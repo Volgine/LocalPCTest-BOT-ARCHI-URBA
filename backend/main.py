@@ -23,12 +23,19 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Read allowed CORS origins from .env (comma separated)
+origins_env = os.getenv("ALLOWED_ORIGINS")
+if origins_env:
+    allowed_origins = [o.strip() for o in origins_env.split(',') if o.strip()]
+else:
+    allowed_origins = ["*"]
+
 app = FastAPI(title="Assistant Urbanisme AI", version="2.0.0")
 
 # CORS pour le frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

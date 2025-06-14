@@ -28,6 +28,7 @@ pip install -r backend/requirements.txt
 # 3. Configurer Groq
 cp backend/.env.example backend/.env
 # puis ajoutez votre clé Groq : https://console.groq.com/keys
+# vous pouvez aussi définir `ALLOWED_ORIGINS` (liste séparée par des virgules)
 
 # 4. Lancer le serveur
 python backend/main.py
@@ -43,6 +44,7 @@ python backend/main.py
    ```
    GROQ_API_KEY=gsk_votre_cle_groq
    REDIS_URL=${{Redis.REDIS_URL}}  # Si Redis ajouté
+   ALLOWED_ORIGINS=*  # Liste d'origines séparées par des virgules
    ```
 5. Deploy!
 
