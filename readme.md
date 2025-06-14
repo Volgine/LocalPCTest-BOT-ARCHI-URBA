@@ -119,13 +119,18 @@ Dans `index.html` :
 
 ## 🧪 Running tests
 
-Les tests unitaires utilisent `pytest`. Installez d'abord les dépendances de
-développement&nbsp;:
+Les tests unitaires utilisent `pytest`. **Avant de lancer les tests, installez
+impérativement à la fois les dépendances du backend et celles de
+développement** :
 
 ```bash
 pip install -r backend/requirements.txt -r requirements-dev.txt
 pytest -q
 ```
+
+Vous pouvez également tout automatiser avec le script `./scripts/setup_env.sh`
+qui crée un environnement virtuel, installe les deux fichiers de
+dépendances et exécute `pytest`.
 
 Le script `load_test.py` permet de lancer des tests de performance
 séparés pour évaluer la charge de l'API.
