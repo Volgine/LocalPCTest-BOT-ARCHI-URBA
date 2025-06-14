@@ -30,6 +30,9 @@ install.bat
 
 # 4. Lancer
 start.bat
+
+# Ou via Docker
+docker-compose up --build
 ```
 
 ## 🌐 Déploiement Railway
