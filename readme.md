@@ -21,18 +21,17 @@
 git clone https://github.com/Volgine/LocalPCTest-BOT-ARCHI-URBA.git
 cd LocalPCTest-BOT-ARCHI-URBA
 
-# 2. Installer (Windows)
-install.bat
+# 2. Installer les dépendances Python
+python -m venv .venv
+source .venv/bin/activate       # sous Windows : .venv\Scripts\activate
+pip install -r backend/requirements.txt
 
 # 3. Configurer Groq
-# Copier backend/.env.example vers backend/.env
-# Puis ajoutez votre clé Groq : https://console.groq.com/keys
+cp backend/.env.example backend/.env
+# puis ajoutez votre clé Groq : https://console.groq.com/keys
 
-# 4. Lancer
-start.bat
-
-# Ou via Docker
-docker-compose up --build
+# 4. Lancer le serveur
+python backend/main.py
 ```
 
 ## 🌐 Déploiement Railway
@@ -52,9 +51,10 @@ docker-compose up --build
 1. Importer sur Vercel
 2. Root directory : `frontend`
 3. Modifier `API_URL` dans index.html : ligne 131
-  const API_URL = window.location.hostname === 'localhost' 
+  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const API_URL = isLocal
             ? 'http://localhost:8000'
-            : 'https://localpctest-bot-archi-urba-test.up.railway.app';
+            : 'https://striking-clarity-actelle.up.railway.app';
 4. Deploy!
 
 ## 🔑 Obtenir Groq API Key
