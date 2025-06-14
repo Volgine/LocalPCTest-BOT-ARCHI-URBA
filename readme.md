@@ -10,7 +10,6 @@
 
 ### Frontend futuriste
 - **Design cyberpunk** : Néon, glassmorphism
-- **Three.js 3D** : Particules animées
 - **Interface interactive** : Animations fluides
 - **Dashboard stats** : Temps réel
 
@@ -112,8 +111,6 @@ model="mixtral-8x7b-32768"  # Par défaut
 ### Modifier le style
 Dans `index.html` :
 - Variables CSS `--primary-neon`, `--secondary-neon`
-- Animations Three.js ligne ~370
-- Effets particules ligne ~350
 
 ## 📊 Monitoring
 
@@ -156,4 +153,4 @@ séparés pour évaluer la charge de l'API.
 ---
 
 **Support** : Créer une issue sur GitHub
-**Stack** : FastAPI + ChromaDB + Groq + Three.js
+**Stack** : FastAPI + ChromaDB + Groq
