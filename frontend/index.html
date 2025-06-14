@@ -128,7 +128,8 @@ Comment puis-je vous aider aujourd'hui ?
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Configuration
-        const API_URL = window.location.hostname === 'localhost'
+        const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+        const API_URL = isLocal
             ? 'http://localhost:8000'
             : 'https://striking-clarity-actelle.up.railway.app';
         
