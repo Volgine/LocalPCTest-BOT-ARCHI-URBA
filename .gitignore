@@ -78,3 +78,6 @@ yarn-error.log*
 # ------------------------
 # Dossier utilisé par ChromaDB pour persister les vecteurs du RAG
 backend/chroma_db/
+# Fichiers d'index FAISS
+faiss.index
+faiss_docs.json
