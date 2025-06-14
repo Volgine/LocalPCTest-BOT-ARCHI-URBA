@@ -145,8 +145,23 @@ function addMessage(content, type, id = null, badges = [], allowHtml = false) {
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
+    function sanitizeHtml(html) {
+        if (typeof DOMPurify !== 'undefined') {
+            return DOMPurify.sanitize(html);
+        }
+        const template = document.createElement('template');
+        template.innerHTML = html;
+        template.content.querySelectorAll('script').forEach(s => s.remove());
+        template.content.querySelectorAll('*').forEach(el => {
+            [...el.attributes].forEach(attr => {
+                if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+            });
+        });
+        return template.innerHTML;
+    }
+
     if (allowHtml) {
-        contentDiv.innerHTML = content;
+        contentDiv.innerHTML = sanitizeHtml(content);
     } else {
         contentDiv.textContent = content;
     }
