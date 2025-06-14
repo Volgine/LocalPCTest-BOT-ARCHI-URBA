@@ -50,13 +50,14 @@ python backend/main.py
 ### Frontend (Vercel)
 1. Importer sur Vercel
 2. Root directory : `frontend`
-3. Modifier `API_URL` dans index.html : ligne 131
+3. Ouvrir `index.html` et ajuster la fonction `getApiUrl()` pour qu'elle renvoie l'adresse de votre backend
   ```javascript
   const getApiUrl = () => {
     const host = window.location.hostname;
     if (['localhost', '127.0.0.1'].includes(host)) {
-      return 'http://localhost:8000';
+      return 'http://localhost:8000'; // backend local
     }
+    // Remplacez l'URL ci-dessous par celle de votre backend déployé
     return 'https://striking-clarity-actelle.up.railway.app';
   };
   const API_URL = getApiUrl();
