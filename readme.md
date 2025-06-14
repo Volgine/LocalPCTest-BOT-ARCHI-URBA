@@ -53,8 +53,8 @@ docker-compose up --build
 2. Root directory : `frontend`
 3. Modifier `API_URL` dans index.html : ligne 131
   const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:8000' 
-            : localpctest-esemple.up.railway.app;
+            ? 'http://localhost:8000'
+            : 'https://localpctest-bot-archi-urba-test.up.railway.app';
 4. Deploy!
 
 ## 🔑 Obtenir Groq API Key
