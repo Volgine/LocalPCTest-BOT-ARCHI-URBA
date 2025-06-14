@@ -10,16 +10,11 @@ import os
 from dotenv import load_dotenv
 import logging
 import time
+
 try:
-    from langchain.embeddings import OpenAIEmbeddings
-    from langchain.llms import OpenAI
-    from langchain.vectorstores import FAISS
-    import openai
-except ImportError:  # Dependencies may be missing in some environments
-    OpenAIEmbeddings = None
-    OpenAI = None
-    FAISS = None
-    openai = None
+    from services.rag import build_rag_pipeline
+except Exception:  # Module may not be available during minimal tests
+    build_rag_pipeline = None
 
 # Configuration
 load_dotenv()
@@ -203,32 +198,14 @@ async def clear_cache():
         return {"message": "Cache non activé"}
 
 def generate_llm_response(question: str, commune: Optional[str] = None) -> str:
-    """Interroge un LLM à l'aide d'un contexte récupéré depuis un vecteur store."""
-    if not (OpenAIEmbeddings and OpenAI and FAISS):
-        raise ImportError("LLM dependencies are not installed")
+    """Interroge le pipeline RAG configuré pour obtenir une réponse."""
+    if build_rag_pipeline is None:
+        raise ImportError("RAG pipeline unavailable")
 
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY not set")
-
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-    store_path = os.getenv("VECTOR_STORE_PATH", "vector_store")
-
-    docs = []
-    if os.path.exists(store_path):
-        try:
-            vs = FAISS.load_local(store_path, embeddings)
-            docs = vs.similarity_search(question, k=4)
-        except Exception as e:
-            logger.warning(f"Vector store load failed: {e}")
-
-    context = "\n".join([d.page_content for d in docs])
-    prompt = (
-        "Réponds à la question suivante en utilisant le contexte fourni s'il est disponible.\n"
-        f"Contexte:\n{context}\n\nQuestion: {question}"
-    )
-    llm = OpenAI(openai_api_key=api_key, temperature=0)
-    return llm.predict(prompt).strip()
+    chain = build_rag_pipeline()
+    query = question if not commune else f"{question}\nCommune: {commune}"
+    result = chain({"query": query})
+    return result.get("result", "")
 
 def generate_mock_response(question: str, commune: Optional[str] = None) -> str:
     """
