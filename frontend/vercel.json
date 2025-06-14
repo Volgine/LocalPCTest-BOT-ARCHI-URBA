@@ -1,20 +1,17 @@
 {
   "name": "urbanisme-assistant-frontend",
   "version": 2,
+  "public": true,
   "builds": [
     {
       "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "app.js",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/index.html"
     }
   ]
 }
