@@ -137,7 +137,9 @@ Comment puis-je vous aider aujourd'hui ?
             return 'https://striking-clarity-actelle.up.railway.app';
         };
         const API_URL = getApiUrl();
-        console.log('Using API_URL:', API_URL);
+        if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+            console.log('Using API_URL:', API_URL);
+        }
         
         // État
         let isLoading = false;
