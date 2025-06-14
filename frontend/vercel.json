@@ -1,15 +1,17 @@
 {
-  "$schema": "...",
+  "name": "urbanisme-assistant-frontend",
   "version": 2,
-  "framework": null,
-  "buildCommand": null,
-  "outputDirectory": ".",
   "public": true,
   "builds": [
-    { "src": "index.html", "use": "@vercel/static" }
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
   ]
 }
