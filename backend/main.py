@@ -116,7 +116,7 @@ def extract_text_from_pdf(file_content: bytes) -> str:
 def extract_text_from_docx(file_content: bytes) -> str:
     """Extrait le texte d'un DOCX"""
     try:
-        doc = docx.Document(file_content)
+        doc = docx.Document(io.BytesIO(file_content))
         text = ""
         for paragraph in doc.paragraphs:
             text += paragraph.text + "\n"
