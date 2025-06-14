@@ -122,7 +122,7 @@ exécutez&nbsp;:
 pytest -q
 ```
 
-Le script `tests/test_load.py` permet de lancer des tests de performance
+Le script `load_test.py` permet de lancer des tests de performance
 séparés pour évaluer la charge de l'API.
 
 ## 🐛 Troubleshooting
