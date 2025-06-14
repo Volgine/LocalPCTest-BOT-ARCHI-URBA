@@ -13,6 +13,7 @@ import time
 import chromadb
 from chromadb.utils import embedding_functions
 import PyPDF2
+import io
 import docx
 from groq import Groq
 import tiktoken
@@ -106,7 +107,7 @@ class StatsResponse(BaseModel):
 def extract_text_from_pdf(file_content: bytes) -> str:
     """Extrait le texte d'un PDF"""
     try:
-        pdf_reader = PyPDF2.PdfReader(file_content)
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(file_content))
         text = ""
         for page in pdf_reader.pages:
             text += page.extract_text() + "\n"
