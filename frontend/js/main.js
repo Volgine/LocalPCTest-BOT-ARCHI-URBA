@@ -135,17 +135,24 @@ function addMessage(content, type, id = null, badges = []) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
     if (id) messageDiv.id = `msg-${id}`;
-    
-    let badgesHtml = '';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.textContent = content;
+    messageDiv.appendChild(contentDiv);
+
     if (badges.length > 0) {
-        badgesHtml = badges.map(badge => `<span class="source-badge">${badge}</span>`).join('');
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'message-meta';
+        badges.forEach(badge => {
+            const badgeSpan = document.createElement('span');
+            badgeSpan.className = 'source-badge';
+            badgeSpan.textContent = badge;
+            metaDiv.appendChild(badgeSpan);
+        });
+        messageDiv.appendChild(metaDiv);
     }
-    
-    messageDiv.innerHTML = `
-        <div class="message-content">${content}</div>
-        ${badgesHtml ? `<div class="message-meta">${badgesHtml}</div>` : ''}
-    `;
-    
+
     messagesDiv.appendChild(messageDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
