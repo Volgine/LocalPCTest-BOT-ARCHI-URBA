@@ -51,19 +51,16 @@ python backend/main.py
 ### Frontend (Vercel)
 1. Importer sur Vercel
 2. Root directory : `frontend`
-3. Ouvrir `index.html` et ajuster la fonction `getApiUrl()` pour qu'elle renvoie l'adresse de votre backend
-  ```javascript
-  const getApiUrl = () => {
-    const host = window.location.hostname;
-    if (['localhost', '127.0.0.1'].includes(host)) {
-      return 'http://localhost:8000'; // backend local
-    }
-    // Remplacez l'URL ci-dessous par celle de votre backend déployé
-    return 'https://striking-clarity-actelle.up.railway.app';
-  };
-  const API_URL = getApiUrl();
-  console.log('Using API_URL:', API_URL);
-  ```
+3. Définir l'URL de l'API :
+   - **Local** : créez un fichier `config.js` dans `frontend` avec
+     ```javascript
+     window.ENV = { API_URL: 'http://localhost:8000' };
+     ```
+     puis ajoutez `<script src="config.js"></script>` avant `js/main.js` dans `index.html`.
+   - **Production** : dans Vercel, ajoutez une variable d'environnement `API_URL`
+     pointant vers votre backend. Elle sera injectée en tant que `window.ENV.API_URL`.
+   Le code lit automatiquement cette valeur dans `frontend/js/main.js` et revient
+   au comportement précédent si elle est absente.
 4. Deploy!
 
 ## 🔑 Obtenir Groq API Key

@@ -1,5 +1,8 @@
 // Configuration
 const getApiUrl = () => {
+    if (window.ENV && window.ENV.API_URL) {
+        return window.ENV.API_URL;
+    }
     const host = window.location.hostname;
     if (['localhost', '127.0.0.1'].includes(host)) {
         return 'http://localhost:8000';
