@@ -59,6 +59,7 @@ Comment puis-je vous aider aujourd'hui ?
                 <!-- Stats Section -->
                 <div class="panel-section">
                     <h3 class="section-title">📊 Statistiques</h3>
+                    <div id="error-message" class="error-message" style="display:none;">Erreur de connexion API</div>
                     <div class="stats-grid">
                         <div class="stat-item">
                             <span class="stat-value" id="queryCount">0</span>
@@ -370,15 +371,22 @@ Comment puis-je vous aider aujourd'hui ?
         
         // Mettre à jour les statistiques
         async function updateStats() {
+            const errorEl = document.getElementById('error-message');
+            if (errorEl) errorEl.style.display = 'none';
             try {
                 const response = await fetch(`${API_URL}/api/stats`);
+                if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
-                
+
                 document.getElementById('queryCount').textContent = data.total_queries;
                 document.getElementById('cacheHits').textContent = data.cache_hits;
-                
+
             } catch (error) {
                 console.error('Stats error:', error);
+                if (errorEl) {
+                    errorEl.textContent = 'Erreur de connexion API';
+                    errorEl.style.display = 'block';
+                }
             }
         }
         
