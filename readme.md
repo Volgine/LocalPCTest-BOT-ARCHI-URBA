@@ -65,7 +65,8 @@ python backend/main.py
      ```
      puis ajoutez `<script src="config.js"></script>` avant `js/main.js` dans `index.html`.
    - **Production** : dans Vercel, ajoutez une variable d'environnement `API_URL`
-     pointant vers votre backend. Elle sera injectée en tant que `window.ENV.API_URL`.
+     pointant vers votre backend (par ex. `https://striking-clarity-actelle.up.railway.app`).
+     Elle sera injectée en tant que `window.ENV.API_URL`.
    Le code lit automatiquement cette valeur dans `frontend/js/main.js` et revient
    au comportement précédent si elle est absente.
 4. Deploy!
