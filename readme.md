@@ -29,12 +29,15 @@ python -m venv .venv
 source .venv/bin/activate       # sous Windows : .venv\Scripts\activate
 pip install -r backend/requirements.txt
 
-# 3. Configurer Groq
+# 3. Installer les dépendances Node (pour les tests et le frontend)
+npm install
+
+# 4. Configurer Groq
 cp backend/.env.example backend/.env
 # puis ajoutez votre clé Groq : https://console.groq.com/keys
 # vous pouvez aussi définir `ALLOWED_ORIGINS` (liste séparée par des virgules)
 
-# 4. Lancer le serveur
+# 5. Lancer le serveur
 python backend/main.py
 ```
 
