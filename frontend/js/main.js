@@ -138,7 +138,8 @@ async function sendMessage() {
 
 // Ajouter un message au chat
 function addMessage(content, type, id = null, badges = [], allowHtml = false) {
-    const messagesDiv = document.getElementById('chatMessages');
+    const messagesDiv = document.getElementById('messagesContainer') ||
+                        document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
     if (id) messageDiv.id = `msg-${id}`;

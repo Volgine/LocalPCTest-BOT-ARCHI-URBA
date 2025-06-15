@@ -1,135 +1,19 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URBA.AI - Assistant Architecture & Urbanisme</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>URBA.AI Chat</title>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">URBA.AI</div>
-        <ul class="nav-links">
-            <li><a href="#">Accueil</a></li>
-            <li><a href="#">Documentation</a></li>
-            <li><a href="#">Support</a></li>
-        </ul>
-    </nav>
-    <div class="main-container">
-        <div class="page-layout">
-            <aside class="sidebar">
-                <ul class="menu">
-                    <li>🏠 Dashboard</li>
-                    <li>📁 Documents</li>
-                    <li>⚙️ Paramètres</li>
-                </ul>
-            </aside>
-            <div class="chat-interface">
-                <div class="chat-panel holo-effect">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="message bot">
-                            <div class="message-content">
-                                Bienvenue dans URBA.AI 🏗️
-
-Je suis votre assistant spécialisé en urbanisme et architecture, équipé d'une IA avancée et d'un système RAG pour analyser vos documents.
-
-Comment puis-je vous aider aujourd'hui ?
-                            </div>
-                            <div class="message-meta">
-                                <span class="source-badge">🤖 System</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="input-area">
-                        <div class="quick-actions">
-                            <button class="quick-action" data-action="Résumé du projet">Résumé</button>
-                            <button class="quick-action" data-action="Contraintes réglementaires">Contraintes</button>
-                        </div>
-                        <div class="input-wrapper" id="uploadZone">
-                            <input type="file" id="fileInput" accept=".pdf,.docx,.txt" style="display:none;">
-                            <button class="upload-button" onclick="document.getElementById('fileInput').click()">📁 Upload</button>
-                            <input type="text" class="chat-input" id="chatInput" placeholder="Posez votre question sur l'urbanisme..." onkeypress="if(event.key === 'Enter' && !event.shiftKey) sendMessage()">
-                            <button class="cyber-button" id="sendButton" onclick="sendMessage()">Analyser</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="info-panel">
-                    <div class="panel-section">
-                        <h3 class="section-title">📊 Statistiques</h3>
-                        <div id="error-message" class="error-message" style="display:none;" role="alert">Erreur de connexion API</div>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-value" id="queryCount">0</span>
-                                <span class="stat-label">Requêtes</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="docCount">0</span>
-                                <span class="stat-label">Documents</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="cacheHits">0</span>
-                                <span class="stat-label">Cache Hits</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="apiCalls">0</span>
-                                <span class="stat-label">Appels API</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="documentsIndexed">0</span>
-                                <span class="stat-label">Docs indexés</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="responseTime">0</span>
-                                <span class="stat-label">ms</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-section">
-                        <h3 class="section-title">🚀 Fonctionnalités</h3>
-                        <div class="feature-item" onclick="askExample('hauteur maximale zone UB')">
-                            <div class="feature-icon">📏</div>
-                            <div>
-                                <div style="font-weight: 600;">Hauteurs & Gabarits</div>
-                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Règles de construction</div>
-                            </div>
-                        </div>
-                        <div class="feature-item" onclick="askExample('emprise au sol autorisée')">
-                            <div class="feature-icon">📐</div>
-                            <div>
-                                <div style="font-weight: 600;">Emprise au Sol</div>
-                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Surfaces constructibles</div>
-                            </div>
-                        </div>
-                        <div class="feature-item" onclick="askExample('règles de stationnement bureaux')">
-                            <div class="feature-icon">🚗</div>
-                            <div>
-                                <div style="font-weight: 600;">Stationnement</div>
-                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Normes parking</div>
-                            </div>
-                        </div>
-                        <div class="feature-item" onclick="askExample('permis de construire nécessaire')">
-                            <div class="feature-icon">📋</div>
-                            <div>
-                                <div style="font-weight: 600;">Autorisations</div>
-                                <div style="font-size: 0.875rem; color: var(--text-secondary);">PC, DP, PA</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-section">
-                        <h3 class="section-title">📄 Documents</h3>
-                        <div id="documentsList">
-                            <div style="color: var(--text-secondary); text-align: center; padding: 20px;">Aucun document uploadé</div>
-                        </div>
-                    </div>
-                    <div class="panel-section" id="projectsPanel">
-                        <h3 class="section-title">🏗️ Projets</h3>
-                        <div id="projectList"></div>
-                        <button class="cyber-button" id="addStudyBtn">+ Étude de Faisabilité</button>
-                        <div id="preview3d" class="preview-3d"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div id="uploadZone">
+        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" hidden>
+        <button class="upload-button" onclick="document.getElementById('fileInput').click()">Upload</button>
+    </div>
+    <div id="messagesContainer"></div>
+    <div class="controls">
+        <input type="text" id="chatInput" placeholder="Ask a question...">
+        <button id="sendButton" onclick="sendMessage()">Send</button>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
     <script src="js/main.js"></script>
