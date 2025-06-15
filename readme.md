@@ -15,6 +15,7 @@
 - **Sidebar projets** : Navigation "Dashboard", "Documents" et "Paramètres" plus un panneau "Projets"
 - **Quick actions** : Boutons "Résumé" et "Contraintes" pour lancer instantanément une analyse
 - **Canvas 3D** : `main.js` initialise désormais un canvas pour prévisualiser les projets
+- **DOMPurify** : Bibliothèque chargée via CDN pour assainir l'HTML généré côté client
 
 ## 📦 Installation locale
 
