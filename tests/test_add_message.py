@@ -1,13 +1,14 @@
 import json
 import subprocess
+import pytest
 from pathlib import Path
 
 
 def ensure_jsdom():
-    """Install jsdom locally if it's not available."""
+    """Skip test if jsdom isn't available."""
     check_cmd = ['node', '-e', 'require("jsdom")']
     if subprocess.run(check_cmd, capture_output=True).returncode != 0:
-        subprocess.run(['npm', 'install', 'jsdom'], check=True)
+        pytest.skip("jsdom is not installed")
 
 
 def test_add_message_sanitizes_html():

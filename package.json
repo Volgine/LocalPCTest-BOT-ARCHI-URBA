@@ -1,0 +1,7 @@
+{
+  "name": "localpctest-bot-archi-urba",
+  "private": true,
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}
